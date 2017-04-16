@@ -17,27 +17,9 @@ namespace AbstractTest
             var valueList = new List<string>();
             var operationList = new List<char>();
 
-
-
-            //s.Where(value =>
-            //{
-            //    var flag = charLst.Any(charValue => charValue == value);
-            //        if (flag)
-            //        {
-            //            valueList[valueList.Count - 1] += value;
-            //        }
-            //        return charLst.Any(charValue => charValue == value);
-            //});
-
-
-
-            //foreach (var variable in s)
-            //{
-            //    if s ==
-            //}
-            //var p = Double.Parse(Console.ReadLine());
-            var str = "- sin2^-2";//"- 1 * - sin - 4 ^ - 2";
-            Console.WriteLine($"{str} = {Calc.Start(str)}");
+            var str = "- sin-1.5x^-3x";//"- 1 * - sin - 4 ^ - 2";
+            double dbX = 3;
+            Console.WriteLine($"x = {dbX}\n{str} = {Calc.Start(str, dbX)}");
             try
             {
                 //Console.WriteLine(new Add(new Umn(new Const(5), new Min(new Del(new Variable(), new Const(0)), new Const(2))), new Const(3)).SetIntValue(5));
@@ -55,159 +37,216 @@ namespace AbstractTest
 
     class Calc
     {
-        private static readonly char[] CharList = new char[] { '*', '/', '+', '-', '^', '(', ')' };
-        private static readonly string[] CharGroup0 = new string[] { "+", "-" };
-        private static readonly string[] CharGroup1 = new string[] { "*", "/" };
-        private static readonly string[] CharGroup2 = new string[] { "^" };
+        private static readonly char UnoMinus = '-';
+        private static readonly char CharVariable = 'x';
+        private static readonly char[] CharList = { '*', '/', '+', '-', '^', '(', ')' };
+        private static readonly char[] CharGroup0 = { '+', '-' };
+        private static readonly char[] CharGroup1 = { '*', '/' };
+        private static readonly char[] CharGroup2 = { '^' };
+        private static readonly string[] StrGroup = { "sin", "cos", "log"};
+        private enum MyEnum {nun, sin, cos, log, min};
 
-        public static string Start(string startValue) => EnumToString(StrResult(EnumToString(startValue.Where(ch => ch != ' '))));
 
-        //private static string StrResult(string source)
-        //{
-        //    var a = source.TakeWhile()
-        //}
-
-        //private static string FindA(string source)
-        //{
-
-        //}
-        private static IEnumerable<char> StrResult(IEnumerable<char> sValue)
+        public static double Start(string startValue, double xValue)
         {
-            var s = EnumToString(sValue);
-            var a = sValue.TakeWhile(NumbersPredicate);
-            var intSkipInterval = a.Count();
-            var operand = sValue.Skip(intSkipInterval).TakeWhile(ch => !NumbersPredicate(ch));
-            intSkipInterval += operand.Count();
-            while (intSkipInterval < sValue.Count())
+            var node = (new LinkedList<char>(startValue.Where(ch => ch != ' '))).First;
+            return StrResult(null, default(char), ref node).SetIntValue(xValue);
+        }
+
+        private static IOperand StrResult(IOperand preValue, char preOperand, ref LinkedListNode<char> sValue)
+        {
+            var a = FindValue(ref sValue);
+            var operand = FindOperand(ref sValue, out int operandPreor);
+            do
             {
-                var boolUno = false;
-                var b = sValue.Skip(intSkipInterval).TakeWhile(NumbersPredicate);
-                intSkipInterval += b.Count();
-
-                //if (operand.Count() > 1 && CharList.Any(ch => ch == operand.First())) //TODO -1
-                //{
-                //    var op = EnumToString(operand);
-                //    if (operand.Count() > 2)
-                //    {
-                //        if (operand.Last() == '-')
-                //        {
-                //            operand = operand.Take(operand.Count() - 1);
-                //            b = UnoOperand(EnumToString(b), "-");
-                //        }
-                //        if (operand.Skip(1).First() == '-')
-                //        {
-                //            //b = UnoOperand(EnumToString(b), "-");
-                //            b = UnoOperand(EnumToString(UnoOperand(EnumToString(b), EnumToString(operand.Skip(2)))), "-");
-                //        }
-                //        else b = UnoOperand(EnumToString(b), EnumToString(operand.Skip(1)));
-                //    }
-                //    else b = UnoOperand(EnumToString(b), EnumToString(operand.Skip(1)));
-                //    operand = operand.Take(1);
-                //}
-                //else if (operand.Count() > 1 || operand.First() == '-')
-                //{
-                //    if (operand.Count() > 1 && operand.Last() == '-')
-                //    {
-                //        operand = operand.Take(operand.Count() - 1);
-                //        b = UnoOperand(EnumToString(b), "-");
-                //    }
-                //    b = UnoOperand(EnumToString(b), EnumToString(operand));
-                //    var sb = EnumToString(b);
-                //    if (!a.Any()) boolUno = true;
-                //    else if (operand.First() != '-')
-                //    {
-                //        operand = "*";
-                //    }
-                //    else operand = "+";
-                //}
-
-                var nextOperand = sValue.Skip(intSkipInterval).TakeWhile(ch => !NumbersPredicate(ch));
-                var t = EnumToString(nextOperand);
-                intSkipInterval += nextOperand.Count();
-
-
-                //if (boolUno)
-                //{
-                //    a = b;
-                //    operand = nextOperand;
-                //}
-                //else if (nextOperand.Count() > 2 && OperandCompare(EnumToString(operand), "*") || OperandCompare(EnumToString(operand), EnumToString(nextOperand.Take(1))))
-                //{
-                //    var op = EnumToString(operand);
-                //    a = DuoOperand(EnumToString(a), EnumToString(b), EnumToString(operand));
-                //    operand = nextOperand;
-                //}
-                //else
-                //{
-                //    var sa = EnumToString(a);
-                //    a = DuoOperand(EnumToString(a), EnumToString(StrResult(b.Concat(nextOperand.Concat(sValue.Skip(intSkipInterval))))), EnumToString(operand));
-                //    break;
-                //}
-            }
+                var b = FindValue(ref sValue);
+                var nextOperand = FindOperand(ref sValue, out int nextOperandPreor);
+                if (operandPreor >= nextOperandPreor)
+                {
+                    a = DuoOperand(a, b, operand);
+                    if (preValue != null && nextOperandPreor < 2) a = DuoOperand(preValue, a, CharGroup1[0]);
+                    operand = nextOperand;
+                    
+                }
+                else
+                {
+                    if (operand == CharGroup1[0])
+                    {
+                        a = StrResult(a, operand, ref sValue); // TODO break???
+                    }
+                    else if (operand == CharGroup1[1])
+                    {
+                        a = StrResult(a, operand, ref sValue);
+                    }
+                    else
+                    {
+                        a = DuoOperand(a, StrResult(null, default(char), ref sValue), operand);
+                    }
+                }
+            } while (sValue != null);
             return a;
         }
 
-        private static void Find(string source)
+        private static char FindOperand(ref LinkedListNode<char> charter, out int intPreor)
         {
-
-        }
-
-        static bool OperandCompare(string op, string nextOp)
-        {
-            int opNum = CharGroup0.Any(ch => ch == Convert.ToString(op)) ? 0
-                : CharGroup1.Any(ch => ch == Convert.ToString(op)) ? 1 : 2; //TODO throw
-            int nextOpNum = CharGroup0.Any(ch => ch == Convert.ToString(nextOp)) ? 0
-                : CharGroup1.Any(ch => ch == Convert.ToString(nextOp)) ? 1 : 2;
-            return opNum >= nextOpNum;
-        }
-
-        static IEnumerable<char> DuoOperand(string a, string b, string operand)
-        {
-            IOperand value;
-            switch (operand)
+            if (charter == null)
             {
-                case "+":
-                    value = new Add(new Const(Convert.ToDouble(a)), new Const(Double.Parse(b)));
-                    break;
-                case "-":
-                    value = new Min(new Const(Convert.ToDouble(a)), new Const(Double.Parse(b)));
-                    break;
-                case "*":
-                    value = new Umn(new Const(Convert.ToDouble(a)), new Const(Double.Parse(b)));
-                    break;
-                case "/":
-                    value = new Del(new Const(Convert.ToDouble(a)), new Const(Double.Parse(b)));
-                    break;
-                case "^":
-                    value = new Up(new Const(Convert.ToDouble(a)), new Const(Double.Parse(b)));
-                    break;
-                default:
-                    throw new Exception("Неверная запись");
+                intPreor = 0;
+                return default(char);
             }
-            return value.SetIntValue(0).ToString(CultureInfo.InvariantCulture);
+            switch (charter.Value)
+            {
+                case '+':
+                case '-':
+                    charter = charter.Next;
+                    intPreor = 0;
+                    return charter.Previous.Value;
+                case '*':
+                case '/':
+                    charter = charter.Next;
+                    intPreor = 1;
+                    return charter.Previous.Value;
+                case '^':
+                    charter = charter.Next;
+                    intPreor = 2;
+                    return charter.Previous.Value;
+                default:
+                    intPreor = 1;
+                    return '*';
+            }
+        }
+        private static IOperand FindValue(ref LinkedListNode<char> charter)
+        {
+            var blUno1 = false;
+            var blUno2 = false;
+            IOperand aValue;
+            var strNumbs = "";
+            if (charter.Value == UnoMinus)
+            {
+                blUno1 = true;
+                charter = charter.Next;
+            }
+            FindFunc(ref charter, out MyEnum funcValue);
+            if (charter.Value == UnoMinus)
+            {
+                blUno2 = true;
+                charter = charter.Next;
+            }
+            while (charter != null && NumbersPredicate(charter.Value))
+            {
+                strNumbs += charter.Value;
+                charter = charter.Next;
+            }
+            if (charter?.Value == CharVariable)
+            {
+                aValue = new Umn(new Const(strNumbs == "" ? 1 : Double.Parse(strNumbs.Replace('.', ','))), new Variable());
+                charter = charter.Next;
+            }
+            else
+            {
+                if(strNumbs == "") throw new Exception("Некорректная запись");
+                aValue = new Const(strNumbs == "" ? 1 : Double.Parse(strNumbs.Replace('.', ',')));
+            }
+            if (blUno2) aValue = UnoOperand(aValue, MyEnum.min);
+            aValue = UnoOperand(aValue, funcValue);
+            if (blUno1) aValue = UnoOperand(aValue, MyEnum.min);
+            return aValue;
         }
 
-        static IEnumerable<char> UnoOperand(string a, string operand)
+        private static void FindFunc(ref LinkedListNode<char> nodeValue, out MyEnum funcValue)
         {
-            IOperand value;
-            switch (operand)
+            funcValue = MyEnum.nun;
+            var strFunc = "";
+            while(nodeValue != null && !NumbersPredicate(nodeValue.Value) && nodeValue.Value != UnoMinus && nodeValue.Value != CharVariable)
+            {
+                strFunc += nodeValue.Value;
+                nodeValue = nodeValue.Next;
+            }
+
+            switch (strFunc)
             {
                 case "sin":
-                    value = new Sin(new Const(Double.Parse(a)));
+                {
+                    funcValue = MyEnum.sin;
                     break;
+                }
                 case "cos":
-                    value = new Cos(new Const(Double.Parse(a)));
+                {
+                    funcValue = MyEnum.cos;
                     break;
-                case "ln":
-                    value = new Ln(new Const(Double.Parse(a)));
+                }
+                case "log":
+                {
+                    funcValue = MyEnum.log;
                     break;
-                case "-":
-                    value = new UnoMin(new Const(Double.Parse(a)));
+                }
+                default:
+                {
+                    if(strFunc.Length > 0) throw new Exception("Неверный ввод");
+                    break;
+                }
+            }
+        }
+
+        //static bool OperandCompare(string op, string nextOp)
+        //{
+        //    int opNum = CharGroup0.Any(ch => ch == Convert.ToString(op)) ? 0
+        //        : CharGroup1.Any(ch => ch == Convert.ToString(op)) ? 1 : 2; //TODO throw
+        //    int nextOpNum = CharGroup0.Any(ch => ch == Convert.ToString(nextOp)) ? 0
+        //        : CharGroup1.Any(ch => ch == Convert.ToString(nextOp)) ? 1 : 2;
+        //    return opNum >= nextOpNum;
+        //}
+
+        static IOperand DuoOperand(IOperand a, IOperand b, char operand)
+        {
+            IOperand value;
+            switch (operand)
+            {
+                case '+':
+                    value = new Add(a, b);
+                    break;
+                case '-':
+                    value = new Min(a, b);
+                    break;
+                case '*':
+                    value = new Umn(a, b);
+                    break;
+                case '/':
+                    value = new Del(a, b);
+                    break;
+                case '^':
+                    value = new Up(a, b);
                     break;
                 default:
                     throw new Exception("Неверная запись");
             }
-            return value.SetIntValue(0).ToString(CultureInfo.InvariantCulture);
+            return value;
+        }
+
+        static IOperand UnoOperand(IOperand a, MyEnum operand)
+        {
+            IOperand value;
+            switch (operand)
+            {
+                case MyEnum.nun:
+                    value = a;
+                    break;
+                case MyEnum.sin:
+                    value = new Sin(a);
+                    break;
+                case MyEnum.cos:
+                    value = new Cos(a);
+                    break;
+                case MyEnum.log:
+                    value = new Ln(a);
+                    break;
+                case MyEnum.min:
+                    value = new UnoMin(a);
+                    break;
+                default:
+                    throw new Exception("Неверная запись");
+            }
+            return value;
         }
 
         static bool NumbersPredicate(char ch) => (ch >= '0') && (ch <= '9') || (ch == '.');
