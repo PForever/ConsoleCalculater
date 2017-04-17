@@ -17,8 +17,8 @@ namespace AbstractTest
             var valueList = new List<string>();
             var operationList = new List<char>();
 
-            var str = "- sin-1.5x^-3x";//"- 1 * - sin - 4 ^ - 2";
-            double dbX = 3;
+            var str = "- 3 sin -1.5157 x ^ 3.5x / -x ^ 25.27 log-x";//"- 1 * - sin - 4 ^ - 2";
+            double dbX = -0.395;
             Console.WriteLine($"x = {dbX}\n{str} = {Calc.Start(str, dbX)}");
             try
             {
@@ -50,40 +50,47 @@ namespace AbstractTest
         public static double Start(string startValue, double xValue)
         {
             var node = (new LinkedList<char>(startValue.Where(ch => ch != ' '))).First;
-            return StrResult(null, default(char), ref node).SetIntValue(xValue);
+            return StrResult(default(char), ref node, out char value).SetIntValue(xValue);
         }
 
-        private static IOperand StrResult(IOperand preValue, char preOperand, ref LinkedListNode<char> sValue)
+        private static IOperand StrResult(char preOperand, ref LinkedListNode<char> sValue, out char lastOperand)
         {
             var a = FindValue(ref sValue);
             var operand = FindOperand(ref sValue, out int operandPreor);
+
+            if (preOperand != default(char) && operandPreor < 2)
+            {
+                lastOperand = operand;
+                return a;
+            }
+
             do
             {
                 var b = FindValue(ref sValue);
                 var nextOperand = FindOperand(ref sValue, out int nextOperandPreor);
+
+
                 if (operandPreor >= nextOperandPreor)
                 {
+
                     a = DuoOperand(a, b, operand);
-                    if (preValue != null && nextOperandPreor < 2) a = DuoOperand(preValue, a, CharGroup1[0]);
                     operand = nextOperand;
-                    
                 }
                 else
                 {
-                    if (operand == CharGroup1[0])
+                    if (operandPreor == 1)
                     {
-                        a = StrResult(a, operand, ref sValue); // TODO break???
-                    }
-                    else if (operand == CharGroup1[1])
-                    {
-                        a = StrResult(a, operand, ref sValue);
+                        a = DuoOperand(a, DuoOperand(b, StrResult(operand, ref sValue, out char tempOperand), nextOperand), operand); // TODO break???
+                        operand = tempOperand;
+                        var p = a.SetIntValue(-0.395);
                     }
                     else
                     {
-                        a = DuoOperand(a, StrResult(null, default(char), ref sValue), operand);
+                        a = DuoOperand(a, StrResult(default(char), ref sValue, out nextOperand), operand);
                     }
                 }
             } while (sValue != null);
+            lastOperand = default(char);
             return a;
         }
 
@@ -439,7 +446,7 @@ namespace AbstractTest
 
         public override double Operation(double a, double b)
         {
-            if (Math.Abs(b) < 0.000000001) throw new Exception("не делите на ноль");
+            if (Math.Abs(b) < 0.000000000000000000000001) throw new Exception("не делите на ноль");
             return a / b;
             //throw new NotImplementedException();
         }
