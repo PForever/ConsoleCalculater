@@ -17,7 +17,7 @@ namespace AbstractTest
             var valueList = new List<string>();
             var operationList = new List<char>();
 
-            var str = "- 3 sin -1.5157 x ^ 3.5x / -x ^ 25.27 log-x";//"- 1 * - sin - 4 ^ - 2";
+            var str = "-sin(-3log(- 3 sin -1.5157 x ^ 3.5x / -x ^ 25.27 log-x)(18x + 3.87)/x^-20)";//"- 1 * - sin - 4 ^ - 2";
             double dbX = -0.395;
             Console.WriteLine($"x = {dbX}\n{str} = {Calc.Start(str, dbX)}");
             try
@@ -38,6 +38,9 @@ namespace AbstractTest
     class Calc
     {
         private static readonly char UnoMinus = '-';
+        private static readonly char OpenBracket = '(';
+        private static readonly char CloseBracket = ')';
+
         private static readonly char CharVariable = 'x';
         private static readonly char[] CharList = { '*', '/', '+', '-', '^', '(', ')' };
         private static readonly char[] CharGroup0 = { '+', '-' };
@@ -58,7 +61,7 @@ namespace AbstractTest
             var a = FindValue(ref sValue);
             var operand = FindOperand(ref sValue, out int operandPreor);
 
-            if (preOperand != default(char) && operandPreor < 2)
+            if (operand == CloseBracket || preOperand != default(char) && operandPreor < 2)
             {
                 lastOperand = operand;
                 return a;
@@ -82,14 +85,13 @@ namespace AbstractTest
                     {
                         a = DuoOperand(a, DuoOperand(b, StrResult(operand, ref sValue, out char tempOperand), nextOperand), operand); // TODO break???
                         operand = tempOperand;
-                        var p = a.SetIntValue(-0.395);
                     }
                     else
                     {
                         a = DuoOperand(a, StrResult(default(char), ref sValue, out nextOperand), operand);
                     }
                 }
-            } while (sValue != null);
+            } while (operand != CloseBracket && sValue != null);
             lastOperand = default(char);
             return a;
         }
@@ -117,6 +119,11 @@ namespace AbstractTest
                     charter = charter.Next;
                     intPreor = 2;
                     return charter.Previous.Value;
+                case ')':
+                    var temp = charter.Value;
+                    if(charter.Next != null) charter = charter.Next;
+                    intPreor = -1;
+                    return temp;
                 default:
                     intPreor = 1;
                     return '*';
@@ -134,29 +141,41 @@ namespace AbstractTest
                 charter = charter.Next;
             }
             FindFunc(ref charter, out MyEnum funcValue);
-            if (charter.Value == UnoMinus)
+            if (charter.Value == OpenBracket)
             {
-                blUno2 = true;
                 charter = charter.Next;
-            }
-            while (charter != null && NumbersPredicate(charter.Value))
-            {
-                strNumbs += charter.Value;
-                charter = charter.Next;
-            }
-            if (charter?.Value == CharVariable)
-            {
-                aValue = new Umn(new Const(strNumbs == "" ? 1 : Double.Parse(strNumbs.Replace('.', ','))), new Variable());
-                charter = charter.Next;
+                aValue = StrResult(default(char), ref charter, out char tempOperand);
             }
             else
             {
-                if(strNumbs == "") throw new Exception("Некорректная запись");
-                aValue = new Const(strNumbs == "" ? 1 : Double.Parse(strNumbs.Replace('.', ',')));
+
+                if (charter.Value == UnoMinus)
+                {
+                    blUno2 = true;
+                    charter = charter.Next;
+                }
+
+                while (charter != null && NumbersPredicate(charter.Value))
+                {
+                    strNumbs += charter.Value;
+                    charter = charter.Next;
+                }
+                if (charter?.Value == CharVariable)
+                {
+                    aValue = new Umn(new Const(strNumbs == "" ? 1 : Double.Parse(strNumbs.Replace('.', ','))),
+                        new Variable());
+                    charter = charter.Next;
+                }
+                else
+                {
+                    if (strNumbs == "") throw new Exception("Некорректная запись");
+                    aValue = new Const(strNumbs == "" ? 1 : Double.Parse(strNumbs.Replace('.', ',')));
+                }
+                if (blUno2) aValue = UnoOperand(aValue, MyEnum.min);
             }
-            if (blUno2) aValue = UnoOperand(aValue, MyEnum.min);
             aValue = UnoOperand(aValue, funcValue);
             if (blUno1) aValue = UnoOperand(aValue, MyEnum.min);
+            var p = aValue.SetIntValue(-0.395);
             return aValue;
         }
 
@@ -164,7 +183,7 @@ namespace AbstractTest
         {
             funcValue = MyEnum.nun;
             var strFunc = "";
-            while(nodeValue != null && !NumbersPredicate(nodeValue.Value) && nodeValue.Value != UnoMinus && nodeValue.Value != CharVariable)
+            while(nodeValue != null && !NumbersPredicate(nodeValue.Value) && nodeValue.Value != UnoMinus && nodeValue.Value != OpenBracket && nodeValue.Value != CharVariable)
             {
                 strFunc += nodeValue.Value;
                 nodeValue = nodeValue.Next;
